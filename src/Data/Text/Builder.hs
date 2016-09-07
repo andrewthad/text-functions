@@ -167,6 +167,7 @@ word8Decimal w
     TArray.unsafeWrite marr (off + 2) $ get3 (j + 2)
   get2 = fromIntegral . ByteString.unsafeIndex twoDigits
   get3 = fromIntegral . ByteString.unsafeIndex threeDigits
+{-# INLINE word8Decimal #-}
 
 twoDigits :: ByteString
 twoDigits = BC8.pack

@@ -18,13 +18,22 @@ import qualified Data.ByteString.Unsafe as ByteString
 
 main :: IO ()
 main = do
-  let ipAddr = IpAddress 192 168 0 99
+  let a = IpAddress 192 168 0 99
+      b = IpAddress 192 168 0 76
+      c = IpAddress 10 10 50 200
+      d = IpAddress 100 0 10 190
+      e = IpAddress 255 255 255 255
+      f = IpAddress 10 0 0 0
   defaultMain
-    [ bgroup "IPv4 to Text"
-      [ bench "Strict Builder" $ whnf strictBuilder ipAddr
-      , bench "Strict Builder Word8" $ whnf strictBuilderWord8 ipAddr
-      , bench "Naive" $ whnf naive ipAddr
-      , bench "Lazy Builder" $ whnf lazyBuilder ipAddr
+    [ bgroup "Multiple IPs to Text"
+      [ bench "Strict Builder" $ whnf (sixIps strictBuilder) (a,b,c,d,e,f)
+      , bench "Strict Builder Word8" $ whnf (sixIps strictBuilderWord8) (a,b,c,d,e,f)
+      ]
+    , bgroup "IPv4 to Text"
+      [ bench "Strict Builder" $ whnf strictBuilderText a
+      , bench "Strict Builder Word8" $ whnf strictBuilderWord8Text a
+      , bench "Naive" $ whnf naive a
+      , bench "Lazy Builder" $ whnf lazyBuilder a
       ]
     ]
 
@@ -58,8 +67,8 @@ lazyBuilder (IpAddress a b c d) =
   <> LazyBuilder.decimal d
   where dot = LazyBuilder.singleton '.'
 
-strictBuilder :: IpAddress -> Text
-strictBuilder (IpAddress a b c d) =
+strictBuilderText :: IpAddress -> Text
+strictBuilderText (IpAddress a b c d) =
   StrictBuilder.toText $
      StrictBuilder.positive a
   <> dot
@@ -70,8 +79,19 @@ strictBuilder (IpAddress a b c d) =
   <> StrictBuilder.positive d
   where dot = StrictBuilder.singletonWord16 46
 
-strictBuilderWord8 :: IpAddress -> Text
-strictBuilderWord8 (IpAddress a b c d) =
+strictBuilder :: IpAddress -> StrictBuilder.Builder
+strictBuilder (IpAddress a b c d) =
+     StrictBuilder.positive a
+  <> dot
+  <> StrictBuilder.positive b
+  <> dot
+  <> StrictBuilder.positive c
+  <> dot
+  <> StrictBuilder.positive d
+  where dot = StrictBuilder.singletonWord16 46
+
+strictBuilderWord8Text :: IpAddress -> Text
+strictBuilderWord8Text (IpAddress a b c d) =
   StrictBuilder.toText $
      StrictBuilder.word8Decimal a
   <> dot
@@ -82,3 +102,24 @@ strictBuilderWord8 (IpAddress a b c d) =
   <> StrictBuilder.word8Decimal d
   where dot = StrictBuilder.singletonWord16 46
 
+strictBuilderWord8 :: IpAddress -> StrictBuilder.Builder
+strictBuilderWord8 (IpAddress a b c d) =
+     StrictBuilder.word8Decimal a
+  <> dot
+  <> StrictBuilder.word8Decimal b
+  <> dot
+  <> StrictBuilder.word8Decimal c
+  <> dot
+  <> StrictBuilder.word8Decimal d
+  where dot = StrictBuilder.singletonWord16 46
+
+sixIps :: (IpAddress -> StrictBuilder.Builder)
+  -> (IpAddress,IpAddress,IpAddress,IpAddress,IpAddress,IpAddress)
+  -> Text
+sixIps g (a,b,c,d,e,f) = StrictBuilder.toText $
+     g a <> StrictBuilder.singletonWord16 44
+  <> g b <> StrictBuilder.singletonWord16 44
+  <> g c <> StrictBuilder.singletonWord16 44
+  <> g d <> StrictBuilder.singletonWord16 44
+  <> g e <> StrictBuilder.singletonWord16 44
+  <> g f
