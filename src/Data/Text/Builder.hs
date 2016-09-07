@@ -57,6 +57,27 @@ singletonWord16 w = Builder 1 $ \marr i -> do
   return (i + 1)
 {-# INLINE singletonWord16 #-}
 
+justifyRightWord16 :: Int -> Word16 -> Builder -> Builder
+justifyRightWord16 newSize w (Builder oldSz f) =
+  if newSize > oldSz
+    then unsafeReplicateWord16 (newSize - oldSz) w <> Builder oldSz f
+    else Builder oldSz f
+
+-- | Count must be non-negative
+unsafeReplicateWord16 :: Int -> Word16 -> Builder
+unsafeReplicateWord16 count w = Builder count $ \marr i -> do
+  bufferReplicateWord16 count w marr i
+  return (count + i)
+
+-- | Count must not be negative or else this will loop.
+bufferReplicateWord16 :: Int -> Word16 -> A.MArray s -> Int -> ST s ()
+bufferReplicateWord16 count w marr startIx = go startIx
+  where
+  go !n = if n == indexAfterLast
+    then return ()
+    else A.unsafeWrite marr n w >> go (n + 1)
+  indexAfterLast = startIx + count
+
 -- singleton :: Char -> Builder
 -- singleton c = Builder (\i marr -> do
 --   C.unsafeWrite marr i c
