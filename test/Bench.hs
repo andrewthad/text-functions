@@ -12,7 +12,8 @@ import Data.ByteString (ByteString)
 import Control.Monad.ST
 import Data.Text.Number (integralToText)
 import Data.Functor.Identity
-import Data.Text.Stitch (applyStitchF, macAddressStitch, Rec(..))
+import Data.Text.Stitch (applyStitchF, macAddressStitch)
+import Data.Rec.Unsafe (rnil,rcons,Rec)
 import qualified Data.Text              as Text
 import qualified Data.Text.Lazy         as LText
 import qualified Data.ByteString.Char8  as BC8
@@ -27,9 +28,9 @@ main = do
       d = IpAddress 100 0 10 190
       e = IpAddress 255 255 255 255
       f = IpAddress 10 0 0 0
-      r = ( RCons (Identity 44) $ RCons (Identity 12) $ RCons (Identity 87)
-          $ RCons (Identity 58) $ RCons (Identity 99) $ RCons (Identity 98)
-          $ RNil
+      r = ( rcons (Identity 44) $ rcons (Identity 12) $ rcons (Identity 87)
+          $ rcons (Identity 58) $ rcons (Identity 99) $ rcons (Identity 98)
+          $ rnil
           )
   defaultMain
     [ -- bgroup "Multiple IPs to Text"
